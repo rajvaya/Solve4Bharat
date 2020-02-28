@@ -41,7 +41,7 @@ class _AddPatientsState extends State<AddPatients> {
                           enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: BorderSide(color: Colors.indigo)),
-                          labelText: "Aadhar Number",
+                          labelText: "Aad ",
                           border: OutlineInputBorder(),
                           hintText: "1234 XXXX XXXX")),
                 ),
