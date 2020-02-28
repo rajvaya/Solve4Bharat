@@ -1,6 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:solve4bharat_vaani/SizeConfig.dart';
+import 'package:solve4bharat_vaani/dashboard.dart';
+import 'package:toast/toast.dart';
 import 'style.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -10,7 +14,9 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
 
   var password = TextEditingController();
+  var _dio = Dio();
   var email = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
@@ -31,13 +37,16 @@ class _LoginState extends State<Login> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 0),
           child: Card(
-            elevation: 6,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15.0),
+            ),
+            elevation: 10,
             child: Column( mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.all(30),
                   child: Center(
-                    child: Image.asset("assets/logo.png" ,height: 100,width: 100,),
+                    child: Image.asset("assets/whitelogo.png" ,height: 200,width: 200,),
                   ),
                 ),
                 Padding(
@@ -73,9 +82,53 @@ class _LoginState extends State<Login> {
                   child: FloatingActionButton.extended(
                       onPressed: () async {
                         _showDialog();
+                      try{
+                        Response response = await _dio.post(
+                            "https://us-central1-solve4bharat-b7a27.cloudfunctions.net/checkDoctor",
+                            data: {
+                              "email": email.text.toString(),
+                              "pwd": password.text.toString()
+                            });
+
+                        if (response.data['message'] == "Successful")
+                        {
+                          print( response.data['data']);
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          prefs.setString("docid",  response.data['data']);
+                          prefs.setString("docname",  response.data['name']);
+                          Toast.show("Login Succsessful", context,
+                              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => DashBoard()),
+                          );
+
+                        }
+
+                        else{
+                          Toast.show("Username or Password is Wrong", context,
+                              duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+                          Navigator.pop(context);
+
+
+                        }
+                      }
+                      catch(e){
+                          print(e.toString());
+                        Toast.show("Something went Wrong Opps Please Try Again", context,
+                            duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
+
+                        Navigator.pop(context);
+
+                      }
+
+
+
+
 
                       },
-                      icon: Icon(Icons.verified_user),
+                      icon: Icon(Icons.vpn_key),
                       label: Text("Login"),
                       backgroundColor: Colors.indigo[300]),
                 ),
@@ -111,7 +164,6 @@ class _LoginState extends State<Login> {
       },
     );
   }
-
 
 
 
