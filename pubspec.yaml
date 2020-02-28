@@ -28,7 +28,9 @@ dependencies:
   google_fonts: ^0.3.9
   toast: ^0.1.5
   search_widget: ^1.0.2
-  floating_search_bar: ^0.3.0
+  speech_to_text: ^0.8.0
+
+
 
 
 dev_dependencies:

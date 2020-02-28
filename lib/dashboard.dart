@@ -1,5 +1,6 @@
-import 'dart:convert';
+import 'package:solve4bharat_vaani/PatientsDetails.dart';
 
+import 'data.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,7 +8,6 @@ import 'package:search_widget/search_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:solve4bharat_vaani/SizeConfig.dart';
 import 'file:///D:/flutterprojects/solve4bharat_vaani/lib/addpatients.dart';
-import 'package:solve4bharat_vaani/patientModel.dart';
 
 class DashBoard extends StatefulWidget {
   @override
@@ -30,6 +30,8 @@ class _DashBoardState extends State<DashBoard> {
     SharedPreferences pref = await SharedPreferences.getInstance();
     docID = pref.getString('docid');
     docName = pref.getString('docname');
+    DoctorID = docID;
+    DoctorName = docName;
     setState(() {
       isLoading = false;
     });
@@ -77,7 +79,7 @@ class _DashBoardState extends State<DashBoard> {
               children: <Widget>[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 0, 0),
-                  child: Text("Morning " + docName,
+                  child: Text("Morning " + DoctorName,
                       style: GoogleFonts.pTSans(
                           fontSize: 30, color: Colors.black)),
                 ),
@@ -108,12 +110,19 @@ class _DashBoardState extends State<DashBoard> {
                         : Column(
                             children: <Widget>[
                               SearchWidget<dynamic>(
-                                onItemSelected: (item){
-                                  print(item.toString());
-
+                                onItemSelected: (item) {
+                                  print("id: "+item['id']);
+                                  PatientID =item['id'];
+                                  PatientObject = item;
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => PatientsDetails()),
+                                  );
                                 },
                                 noItemsFoundWidget: NoItemsFound(),
-                                textFieldBuilder: (TextEditingController controller, FocusNode focusNode) {
+                                textFieldBuilder:
+                                    (TextEditingController controller,
+                                        FocusNode focusNode) {
                                   return MyTextField(controller, focusNode);
                                 },
                                 listContainerHeight:
@@ -127,13 +136,14 @@ class _DashBoardState extends State<DashBoard> {
                                         .contains(query.toLowerCase());
                                   }).toList();
                                 },
-                                  popupListItemBuilder: (dynamic item) {
-                                    return PopupListItemWidget(item);
-                                  },
-                      selectedItemBuilder: (selectedItem, deleteSelectedItem) {
-                return SelectedItemWidget(selectedItem, deleteSelectedItem);
-                },
-
+                                popupListItemBuilder: (dynamic item) {
+                                  return PopupListItemWidget(item);
+                                },
+                                selectedItemBuilder:
+                                    (selectedItem, deleteSelectedItem) {
+                                  return SelectedItemWidget(
+                                      selectedItem, deleteSelectedItem);
+                                },
                               ),
                               Flexible(
                                 child: ListView.builder(
@@ -157,6 +167,16 @@ class _DashBoardState extends State<DashBoard> {
                                                   color: Colors.indigo[300],
                                                   width: 2)),
                                           child: ListTile(
+                                            onTap: (){
+                                              print("id: "+PatientsList[index]['id']);
+                                              PatientID =PatientsList[index]['id'];
+                                              PatientObject = PatientsList[index];
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(builder: (context) => PatientsDetails()),
+                                              );
+
+                                            },
                                             title: Text(PatientsList[index]
                                                 ["data"]["name"]),
                                             subtitle: Text(PatientsList[index]
@@ -191,11 +211,12 @@ class _DashBoardState extends State<DashBoard> {
             },
             icon: Icon(Icons.shopping_cart),
             label: Text("Add Patients"),
-            backgroundColor: Colors.indigo[300]),
+            backgroundColor: Colors.indigo[200]),
       ),
     );
   }
 }
+
 class PopupListItemWidget extends StatelessWidget {
   const PopupListItemWidget(this.item);
 
@@ -212,6 +233,7 @@ class PopupListItemWidget extends StatelessWidget {
     );
   }
 }
+
 class SelectedItemWidget extends StatelessWidget {
   const SelectedItemWidget(this.selectedItem, this.deleteSelectedItem);
 
@@ -278,6 +300,7 @@ class NoItemsFound extends StatelessWidget {
     );
   }
 }
+
 class MyTextField extends StatelessWidget {
   const MyTextField(this.controller, this.focusNode);
 

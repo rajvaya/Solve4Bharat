@@ -71,13 +71,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.9"
-  floating_search_bar:
-    dependency: "direct main"
-    description:
-      name: floating_search_bar
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.3.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -128,6 +121,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.4"
+  json_annotation:
+    dependency: transitive
+    description:
+      name: json_annotation
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.1"
   matcher:
     dependency: transitive
     description:
@@ -231,6 +231,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.5.5"
+  speech_to_text:
+    dependency: "direct main"
+    description:
+      name: speech_to_text
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.8.0"
   stack_trace:
     dependency: transitive
     description:
@@ -295,5 +302,5 @@ packages:
     source: hosted
     version: "3.5.0"
 sdks:
-  dart: ">2.4.0 <3.0.0"
+  dart: ">=2.6.0 <3.0.0"
   flutter: ">=1.12.13+hotfix.4 <2.0.0"

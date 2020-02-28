@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:solve4bharat_vaani/PatientsDetails.dart';
+import 'package:solve4bharat_vaani/SpeechModule.dart';
+import 'package:solve4bharat_vaani/data.dart';
 import 'package:toast/toast.dart';
-
 import 'SizeConfig.dart';
 
 class AddPatients extends StatefulWidget {
@@ -12,13 +15,15 @@ class AddPatients extends StatefulWidget {
 class _AddPatientsState extends State<AddPatients> {
   var _dio = new Dio();
   var phone = TextEditingController();
-  var aadhar = TextEditingController();
+  var name = TextEditingController();
   var email = TextEditingController();
-
+  var dob = TextEditingController();
+  var gender = TextEditingController();
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -30,18 +35,19 @@ class _AddPatientsState extends State<AddPatients> {
         padding: const EdgeInsets.all(16.0),
         child: Card(
           elevation: 10,
-          child: Column( mainAxisSize: MainAxisSize.min,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Container(
                   child: TextField(
-                      controller: aadhar,
+                      controller: name,
                       decoration: InputDecoration(
                           enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10.0),
                               borderSide: BorderSide(color: Colors.indigo)),
-                          labelText: "Aad ",
+                          labelText: "Name",
                           border: OutlineInputBorder(),
                           hintText: "1234 XXXX XXXX")),
                 ),
@@ -75,47 +81,86 @@ class _AddPatientsState extends State<AddPatients> {
                 ),
               ),
               Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Container(
+                  child: TextField(
+                      controller: dob,
+                      decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(color: Colors.indigo)),
+                          labelText: "Date Of Birth",
+                          border: OutlineInputBorder(),
+                          hintText: "DD-MM-YYYY")),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Container(
+                  child: TextField(
+                      controller: gender,
+                      decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                              borderSide: BorderSide(color: Colors.indigo)),
+                          labelText: "gender",
+                          border: OutlineInputBorder(),
+                          hintText: "Male/Female")),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: FloatingActionButton.extended(
                     onPressed: () async {
                       _showDialog();
+                      SharedPreferences pref =
+                          await SharedPreferences.getInstance();
+                      var docID = pref.getString('docid');
+
+
                       try {
-                        print(phone.text.toString());
-                        print(aadhar.text.toString());
                         Response response = await _dio.post(
-                            "https://us-central1-hexahive-fda2d.cloudfunctions.net/test",
+                            "https://us-central1-solve4bharat-b7a27.cloudfunctions.net/addPatient",
                             data: {
-                              "aadhaar_number": aadhar.text.toString(),
-                              "phone_number": phone.text.toString()
+                              "email": email.text.toString(),
+                              "phone": phone.text.toString(),
+                              "docID": docID,
+                              "dob": dob.text.toString(),
+                              "name": name.text.toString(),
+                              "gender": gender.text.toString()
                             });
+                        if (response.data['data']!= null) {
+                          print(response.data['data']);
 
-                        print(response.data['message']);
-                        if (response.data['message'] == "Aadhaar Data found") {
-                          Response response1 = await _dio.post(
-                              "https://us-central1-hexahive-fda2d.cloudfunctions.net/policeVerification",
-                              data: {"phone_number": phone.text.toString()});
-                          print(response1.data['message']);
-                          if (response1.data['message'] == "No record found") {
-                            Response response2 = await _dio.post(
-                                "https://us-central1-hexahive-fda2d.cloudfunctions.net/mailSend",
-                                data: {"email": email.text});
-                            print(response2.toString());
-                            Navigator.pop(context);
-
-                          }
+                          var DataObject = {
+                             "id": response.data['data'],
+                            "data" : {
+                              "email": email.text.toString(),
+                              "phone": phone.text.toString(),
+                              "docID": docID,
+                              "dob": dob.text.toString(),
+                              "name": name.text.toString(),
+                              "gender": gender.text.toString(),
+                            }
+                          };
+                          PatientObject = DataObject;
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => PatientsDetails()),
+                          );
                         }
                       } catch (e) {
                         print(e);
                         // BotToast.showText(text:"xxxx");
                         Toast.show("Something went Wrong Opps", context,
                             duration: Toast.LENGTH_LONG, gravity: Toast.BOTTOM);
-
                         Navigator.pop(context);
                       }
                     },
-                    icon: Icon(Icons.verified_user),
-                    label: Text("Verify"),
-                    backgroundColor: Colors.indigo[300]),
+                    icon: Icon(Icons.add),
+                    label: Text("ADD"),
+                    backgroundColor: Colors.indigo[200]),
               ),
             ],
           ),
@@ -138,7 +183,7 @@ class _AddPatientsState extends State<AddPatients> {
               Center(
                 child: CircularProgressIndicator(
                   valueColor: new AlwaysStoppedAnimation<Color>(
-                    Colors.indigo[300],
+                    Colors.indigo[200],
                   ),
                 ),
               )
