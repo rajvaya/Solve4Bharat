@@ -1,15 +1,12 @@
-import 'dart:ffi';
-
+import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solve4bharat_vaani/data.dart';
 import 'package:solve4bharat_vaani/prescriptionscreen.dart';
-import 'dart:async';
-
 import 'package:speech_to_text/speech_to_text.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_recognition_error.dart';
-
 import 'SizeConfig.dart';
+import 'package:speech_recognition/speech_recognition.dart';
 
 class SpeechModule extends StatefulWidget {
   @override
@@ -23,21 +20,60 @@ class _SpeechModuleState extends State<SpeechModule> {
   String lastStatus = "";
   String Prescription = "";
   bool initmic = true;
-  final SpeechToText speech = SpeechToText();
+  bool isListening = false;
+  var _dio = Dio();
+  var _speech = SpeechRecognition();
+
+  List prescriptionlist = [];
 
   @override
   void initState() {
     super.initState();
-    initSpeechState();
+    _speech.activate();
+    initSpeechRecognizer();
   }
 
-  Future<void> initSpeechState() async {
-    bool hasSpeech = await speech.initialize(
-        onError: errorListener, onStatus: statusListener);
-    if (!mounted) return;
-    setState(() {
-      _hasSpeech = hasSpeech;
+  initSpeechRecognizer() {
+    _speech.setRecognitionResultHandler((String text) {
+      setState(() {
+           lastWords = text;
+        });
     });
+
+    _speech.setRecognitionCompleteHandler(
+        () {
+          isListening = false;
+          if (!isListening) {
+//            prescriptionlist.add(lastWords);
+//            Prescription= " ";
+//            for(int i=0;i<=prescriptionlist.length;i++)
+//            {
+//              prescriptionlist.removeAt(i);
+//            }
+//           // Prescription += lastWords;
+//           for(int i=0;i<=prescriptionlist.length;i++)
+//             {
+//               Prescription = Prescription + prescriptionlist[i];
+//             }
+//            print(Prescription);
+//            lastWords = " ";
+            setState(() {
+              if (initmic) {
+                initmic = !initmic;
+              }
+            });
+          }
+        });
+
+    _speech
+        .setRecognitionStartedHandler(() => setState(() {
+           isListening = true;
+           if(initmic){
+             initmic = !initmic;
+           }
+        }));
+
+
   }
 
   @override
@@ -50,237 +86,148 @@ class _SpeechModuleState extends State<SpeechModule> {
         centerTitle: true,
         backgroundColor: Colors.indigo[200],
       ),
-      body: _hasSpeech
+      body: !_hasSpeech
           ? Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-              Expanded(
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                          BorderRadius.circular(16),
-                          border: Border.all(
-                              color: Colors.indigo[300],
-                              width: 2),
-                        ),
-                        height: SizeConfig.safeBlockVertical * 20,
-                        width: SizeConfig.safeBlockHorizontal*100 - 32,
-                        child: Padding(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                  Expanded(
+                    child: Column(
+                      children: <Widget>[
+                        Padding(
                           padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.max,
-                            children: <Widget>[
-                            Text(
-                            speech.isListening ? "I Can Here Something Like ....":"I Am Not Listening !",
-                            style: GoogleFonts.bevan(
-                                fontSize: 24,
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w400),
-                              textAlign: TextAlign.center,
-                          ),
-                              Text(
-                                speech.isListening ? lastWords: initmic ? "Click on Speak to Start Prescribing" : " Click On Add More For Adding More Data",
-                                style: GoogleFonts.pTSans(
-                                    fontSize: 20,
-                                    color: Colors.grey[500],
-                                    fontWeight: FontWeight.w600),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius:
-                          BorderRadius.circular(16),
-                            border: Border.all(
-                                color: Colors.indigo[300],
-                                width: 2),
-                        ),
-                        height: SizeConfig.safeBlockVertical * 60,
-                        child: Column(
-                          children: <Widget>[
-                            Center(
-                              child: Text(
-                                "Prescription",
-                                style: GoogleFonts.bevan(
-                                    fontSize: 24,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w400),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.indigo[300], width: 2),
+                            ),
+                            height: SizeConfig.safeBlockVertical * 20,
+                            width: SizeConfig.safeBlockHorizontal * 100 - 32,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.max,
+                                children: <Widget>[
+                                  Text(
+                                    isListening
+                                        ? "I can hear something like ...."
+                                        : "I am not listening!",
+                                    style: GoogleFonts.bevan(
+                                        fontSize: 24,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w400),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
-                            Center(
-                              child: Text(
-                                 Prescription,
-                                style: GoogleFonts.pTSans(
-                                    fontSize: 20,
-                                    color: Colors.grey[500],
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.indigo[300], width: 2),
+                            ),
+                            height: SizeConfig.safeBlockVertical * 60,
+                            child: Column(
+                              children: <Widget>[
+                                Center(
+                                  child: Text(
+                                    "Prescription",
+                                    style: GoogleFonts.bevan(
+                                        fontSize: 24,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w400),
+                                  ),
+                                ),
+                                Center(
+                                  child: Text(
+                                    lastWords,
+                                    style: GoogleFonts.pTSans(
+                                        fontSize: 20,
+                                        color: Colors.grey[500],
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-            ])
+                  ),
+                ])
           : Center(
               child: Text('Speech recognition unavailable',
                   style:
                       TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold))),
-      floatingActionButton: initmic?initmicwidget(): MultiFabs(),
+      floatingActionButton:  MultiFabs(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
-  void startListening() {
-    lastWords = "";
-    lastError = "";
-    speech.listen(onResult: resultListener);
-    setState(() {});
-  }
-
-  void stopListening() {
-    speech.stop();
-    setState(() {});
-  }
-
-  void cancelListening() {
-    speech.cancel();
-    setState(() {});
-  }
-
-  void resultListener(SpeechRecognitionResult result) {
-    setState(() {
-      lastWords = "${result.recognizedWords}";
-      //joinText();
-      //Prescription = lastWords;
-      //joinText();
-    });
-  }
-
-  void errorListener(SpeechRecognitionError error) {
-    setState(() {
-      lastError = "${error.errorMsg} - ${error.permanent}";
-    });
-  }
-
-  void joinText() {
-    print("IN JOIN");
-    if (!speech.isListening) {
-      Prescription = Prescription + " " + lastWords;
-      lastWords = " ";
-      setState(() {
-
-        if(initmic){
-          initmic = !initmic;
-        }
-      });
-    }
-  }
-
-  void statusListener(String status) {
-    joinText();
-    setState(() {
-      lastStatus = "$status";
-    });
-  }
-
-  Widget initmicwidget(){
-    return FloatingActionButton.extended(
-      icon: Icon(Icons.mic),
-      label: Text('Speak'),
-      onPressed: startListening,
-      backgroundColor: Colors.indigo[200],
-    );
-  }
 
 
-  Widget MultiFabs(){
+
+
+  Widget MultiFabs() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
       children: <Widget>[
         FloatingActionButton.extended(
+          heroTag: "mic",
           icon: Icon(Icons.mic),
-          label: Text('Add More'),
-          onPressed: startListening,
-          backgroundColor: Colors.indigo[200],
-        ),
-        FloatingActionButton.extended(
-          icon: Icon(Icons.clear),
-          label: Text('Clear'),
-          onPressed: (){
-         Prescription = " ";
-         initmic = true;
-         setState(() {
-
-         });
+          label: Text('Speak'),
+          onPressed: () {
+            _speech.listen(locale: "en_IN");
           },
           backgroundColor: Colors.indigo[200],
         ),
         FloatingActionButton.extended(
+          heroTag: "clear",
+          icon: Icon(Icons.clear),
+          label: Text('Clear'),
+          onPressed: () {
+            Prescription = " ";
+            lastWords = " ";
+            initmic = true;
+            setState(() {});
+          },
+          backgroundColor: Colors.indigo[200],
+        ),
+        FloatingActionButton.extended(
+          heroTag: "send",
           icon: Icon(Icons.send),
           label: Text('Send'),
-          onPressed: (){
-            print(Prescription);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PrescriptionScreen()),
-            );
+          onPressed: () async {
+            try {
+              var jsondata = jsonEncode({'pres_str': lastWords});
+              Response response = await _dio.post(
+                  "https://vaani-nlp.herokuapp.com/model",
+                  data: jsondata);
+              if (response.statusCode == 200) {
+                print(response.data.toString());
+                DataObject = response.data;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PrescriptionScreen()),
+                );
+              } else {
+                print("ERROR");
+              }
+            } catch (e) {
+              print(e.toString());
+            }
           },
           backgroundColor: Colors.indigo[200],
         ),
       ],
     );
-  }
-
-}
-
-class _HexagonBorder extends ShapeBorder {
-  const _HexagonBorder();
-
-  @override
-  EdgeInsetsGeometry get dimensions {
-    return const EdgeInsets.only();
-  }
-
-  @override
-  Path getInnerPath(Rect rect, {TextDirection textDirection}) {
-    return getOuterPath(rect, textDirection: textDirection);
-  }
-
-  @override
-  Path getOuterPath(Rect rect, {TextDirection textDirection}) {
-    return Path()
-      ..moveTo(rect.left + rect.width / 6.0, rect.top)
-      ..lineTo(rect.right - rect.width / 6.0, rect.top)
-      ..lineTo(rect.right, rect.top + rect.height / 2.0)
-      ..lineTo(rect.right - rect.width / 6.0, rect.bottom)
-      ..lineTo(rect.left + rect.width / 6.0, rect.bottom)
-      ..lineTo(rect.left, rect.bottom - rect.height / 2.0)
-      ..close();
-  }
-
-  @override
-  void paint(Canvas canvas, Rect rect, {TextDirection textDirection}) {}
-
-  // This border doesn't support scaling.
-  @override
-  ShapeBorder scale(double t) {
-    return null;
   }
 }
