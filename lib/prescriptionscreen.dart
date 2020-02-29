@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:solve4bharat_vaani/SizeConfig.dart';
 import 'package:solve4bharat_vaani/style.dart';
+import 'package:toast/toast.dart';
 import 'data.dart';
 
 class PrescriptionScreen extends StatefulWidget {
@@ -104,8 +105,11 @@ class _PrescriptionScreenState extends State<PrescriptionScreen> {
         ),
       ),
 
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
 
+           onPressed: (){
+             Toast.show("Not Available", context);
+           },
       ),
     );
   }
